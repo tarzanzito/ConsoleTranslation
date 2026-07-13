@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -31,17 +32,17 @@ namespace ConsoleTranslation
                 TranslationInfo translationInfo = ValidateArguments(args);
 
                 string text = System.IO.File.ReadAllText(translationInfo.FileNameIn, Encoding.UTF8);
+                
+                char[] charsToFind = new char[] { '\n' };
 
-                LibretranslateSubTitles translatorL = new();
-                string resultL = await translatorL.TranslateSubTitles(text, translationInfo.SourceLang, translationInfo.TargetLang);
+                //string result = sb.ToString();
+                //File.WriteAllText(translationInfo.FileNameOut, result, Encoding.UTF8);
 
-                File.WriteAllText(translationInfo.FileNameOut, resultL, Encoding.UTF8);
+                Googletranslator translator = new();
+                Class1 trans = new(translator);
+                string transletedText = await trans.TranslateAsync(text, translationInfo.SourceLang, translationInfo.TargetLang, charsToFind, 4500);
 
-                GoogletranslateSubTitles translatorG = new();
-
-                string resultG = await translatorL.TranslateSubTitles(text, translationInfo.SourceLang, translationInfo.TargetLang);
-
-
+                File.WriteAllText(translationInfo.FileNameOut, transletedText, Encoding.UTF8);
             }
             catch (Exception ex)
             {
@@ -87,7 +88,8 @@ namespace ConsoleTranslation
             {
                 FileNameIn = fileIn,
                 SourceLang = source,
-                TargetLang = target
+                TargetLang = target,
+                FileNameOut = fileOut
             };
 
             return translationInfo;
