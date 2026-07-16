@@ -4,45 +4,53 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 
 namespace ConsoleTranslation
 {
-    internal class TranslationInfo
-    {
-
-        public string FileNameIn { get; init; } = String.Empty;
-        public string FileNameOut { get; init; } = String.Empty;
-        public string SourceLang { get; init; } = String.Empty;
-        public string TargetLang { get; init; } = String.Empty;
-    }
-
     internal static class Program
     {
-        internal static async Task<int> Main(string[] args)
+        internal static int Main(string[] args)
         {
+            // Underneath the cover
+            // Call your asynchronous Main function
+            // and waits for the result safely.
+            return MainAsync(args).GetAwaiter().GetResult();
+        }
+
+        //renamed Main to MainAsync
+        internal static async Task<int> MainAsync(string[] args)
+        {
+            //"Files\Amistad-1997-eng.srt" eng pt 
+            //falta o CancellationToken cancellationToken  !!!!!!!!!
+
             Console.WriteLine("Google Translate (Version: 1.1.1");
 
             try
             {
-                TranslationInfo translationInfo = ValidateArguments(args);
+                TranslationData translationData = ValidateArguments(args);
 
-                string text = System.IO.File.ReadAllText(translationInfo.FileNameIn, Encoding.UTF8);
+                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8);
                 
-                char[] charsToFind = new char[] { '\n' };
-
-                //string result = sb.ToString();
-                //File.WriteAllText(translationInfo.FileNameOut, result, Encoding.UTF8);
 
                 Googletranslator translator = new();
-                Class1 trans = new(translator);
-                string transletedText = await trans.TranslateAsync(text, translationInfo.SourceLang, translationInfo.TargetLang, charsToFind, 4500);
 
-                File.WriteAllText(translationInfo.FileNameOut, transletedText, Encoding.UTF8);
+                TranslatorHelper translatorHelper = new(translator);
+                //char[] _charsToSplitAtEnd = new[] { '.' };
+                //TranslatorHelper translatorHelper = new(translator, _charsToSplitAtEnd);
+
+
+                List<string> textBlockList = await translatorHelper.GenerateBlockListFromStringAsync(text);
+
+                List<string> translatedTextBlockList = await translatorHelper.TranslateBlockListAsync(textBlockList, translationData.SourceLang, translationData.TargetLang);
+
+                string result = await translatorHelper.GenerateStringFromBlockListAsync(translatedTextBlockList);
+
+                await File.WriteAllTextAsync(translationData.FileNameOut, result, Encoding.UTF8);
             }
             catch (Exception ex)
             {
@@ -55,7 +63,7 @@ namespace ConsoleTranslation
             return 0;
         }
 
-        private static TranslationInfo ValidateArguments(string[] args)
+        private static TranslationData ValidateArguments(string[] args)
         {
             if (args.Length != 3)
             {
@@ -82,9 +90,10 @@ namespace ConsoleTranslation
             if (pos == -1)
                 throw new Exception("Input File without extension.");
 
-            string fileOut = fileIn.Insert(pos, $"-{target}");
+            string fileOut = fileIn.Replace($"-{source}", $"-{target}");
+            //string fileOut = fileIn.Insert(pos, $"-{target}");
 
-            TranslationInfo translationInfo = new()
+            TranslationData translationData = new()
             {
                 FileNameIn = fileIn,
                 SourceLang = source,
@@ -92,11 +101,7 @@ namespace ConsoleTranslation
                 FileNameOut = fileOut
             };
 
-            return translationInfo;
+            return translationData;
         }
-
     }
 }
-
-
-

@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleTranslation": {
       "commandName": "Project",
-      "commandLineArgs": "\"E:\\Torrents10\\_Save\\The Beach (2000)\\The.Beach.2000.720p.BrRip.x264.YIFY.srt\" eng pt"
+      "commandLineArgs": "\"..\\..\\..\\Files\\Amistad-1997-eng.srt\" eng pt"
     }
   }
 }
