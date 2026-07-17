@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +13,7 @@ namespace ConsoleTranslation
         internal static int Main(string[] args)
         {
             // Underneath the cover
-            // Call your asynchronous Main function
+            // Call asynchronous Main function
             // and waits for the result safely.
             return MainAsync(args).GetAwaiter().GetResult();
         }
@@ -25,42 +21,63 @@ namespace ConsoleTranslation
         //renamed Main to MainAsync
         internal static async Task<int> MainAsync(string[] args)
         {
-            //"Files\Amistad-1997-eng.srt" eng pt 
             //falta o CancellationToken cancellationToken  !!!!!!!!!
 
-            Console.WriteLine("Google Translate (Version: 1.1.1");
+            Console.WriteLine("Google Translate (Version: 1.1.5");
+
+            int ret = 0;
+            //CancellationTokenSource cancellationTokenSource = new();
 
             try
             {
+
+                Console.WriteLine("Validate args.");
                 TranslationData translationData = ValidateArguments(args);
 
-                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8);
-                
+                Console.WriteLine($"Read all file: '{translationData.FileNameIn}'.");
+                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8, cancellationTokenSource);
 
+                //Cloose translator
+                //Libretranslator translator = new();
                 Googletranslator translator = new();
 
+                //Create TranslatorHelper 
+                //using NewLine to split
                 TranslatorHelper translatorHelper = new(translator);
-                //char[] _charsToSplitAtEnd = new[] { '.' };
+
+                //using special chars to split
+                //char[] _charsToSplitAtEnd = new[] { '.', '?' , '!'};
                 //TranslatorHelper translatorHelper = new(translator, _charsToSplitAtEnd);
 
-
+                //splits All file string into List<string>
+                Console.WriteLine("Splits all string into List<string>.");
                 List<string> textBlockList = await translatorHelper.GenerateBlockListFromStringAsync(text);
 
-                List<string> translatedTextBlockList = await translatorHelper.TranslateBlockListAsync(textBlockList, translationData.SourceLang, translationData.TargetLang);
+                //translate List<atring>
+                Console.WriteLine("Translate List<atring>.");
+                //List<string> translatedTextBlockList = await translatorHelper.TranslateBlockListAsync(textBlockList, translationData.SourceLang, translationData.TargetLang);
 
+                //for only compare in and out files. must be equals
+                List<string> translatedTextBlockList = textBlockList;
+
+                //join List<string> into one string
+                Console.WriteLine("Koin translated List<string> into one string.");
                 string result = await translatorHelper.GenerateStringFromBlockListAsync(translatedTextBlockList);
+
+                //Write translated file
+                Console.WriteLine($"Write all string into file: '{translationData.FileNameOut}'.");
 
                 await File.WriteAllTextAsync(translationData.FileNameOut, result, Encoding.UTF8);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
-                return 1;
+                Console.WriteLine($"Error found: {ex.Message}");
+                ret= 1;
             }
 
-            Console.WriteLine($"File translated.");
+            Console.WriteLine($"Process terminated. Return value:{ret}.");
 
-            return 0;
+            return ret;
         }
 
         private static TranslationData ValidateArguments(string[] args)

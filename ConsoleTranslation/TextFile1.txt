@@ -1,0 +1,87 @@
+﻿        private async Task<List<string>> GenerateBlockListFromStringAsync(string text)
+        {
+            await Task.Yield();
+
+            bool findOnlyOneChar = _charsToSplitAtEnd.Length == 1;
+            int pos = 0;
+            string temp = string.Empty;
+            int maxBlockSize = 0;
+            int realLength = 0;
+            List<string> blockList = new();
+
+            ValidateText(text);
+            ValidationBlockSize();
+
+            try
+            {
+                while (pos < text.Length)
+                {
+                    //if (blockList.Count > 3)
+                    //    Console.WriteLine("xxxxxxxxxx");
+
+                    //if ((pos + blockSize) < text.Length)
+                    //    maxBlockSize = (pos + blockSize);
+                    //else
+                    //{
+                    //    maxBlockSize = text.Length;
+                    //    isLast = true;
+                    //}
+
+                    // 1. Define o tamanho máximo que podemos ler a partir da posição atual
+                    maxBlockSize = Math.Min(pos + _blockSize, text.Length); // - pos);
+
+                    // 2. Tira o pedaço provisório (a nova string a analisar)
+                    temp = text.Substring(pos, maxBlockSize - pos);
+
+                    // 3. Procura o últimofindOneChar trás para a frente dentro deste pedaço
+
+                    if (maxBlockSize >= text.Length)
+                        realLength = text.Length;
+                    else
+                    {
+                        if (_useNewLineToSplitAtEnd)
+                        {
+                            realLength = temp.LastIndexOf(System.Environment.NewLine);
+                        }
+                        else
+                        {
+                            if (findOnlyOneChar)
+                                realLength = temp.LastIndexOf(_charsToSplitAtEnd);
+                            else
+                                realLength = temp.LastIndexOfAny(_charsToSplitAtEnd);
+                        }
+                    }
+
+                    // Se encontrou um ponto E não é o último bloco completo do texto
+                    if (realLength != -1 && (pos + maxBlockSize) < text.Length)
+                    {
+                        // O tamanho real do corte será até ao ponto (incluindo o ponto)
+                        //int realLength = lastPos;// + 1;
+
+                        // Recorta a string final com o tamanho corrigido
+                        string pedacoFinal = temp.Substring(0, realLength);
+                        blockList.Add(pedacoFinal);
+
+                        // O loop avança exatamente para a posição a seguir ao ponto
+                        pos += realLength;
+                    }
+                    else
+                    {
+                        // Se não houver ponto (ou se for o fim do texto), aceita o pedaço inteiro
+                        blockList.Add(temp);
+                        pos += temp.Length;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+
+        
+            //return Task.CompletedTask; //if return is void blockList;
+            //return Task.FromResult(blocos);  parece que não que async na defenição
+
+            return blockList;
+        }

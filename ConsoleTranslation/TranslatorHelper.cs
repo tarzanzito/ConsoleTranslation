@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ConsoleTranslation
 {
@@ -14,7 +15,7 @@ namespace ConsoleTranslation
 
         private ITranslator _translator;
         private int _blockSize;
-        private bool _useNewLineToSplitAtEnd = true;
+        private bool _useNewLineToSplitAtEnd;
         private char[] _charsToSplitAtEnd = new[] { '\0' };
         private bool _findOnlyByOneChar;
 
@@ -44,20 +45,28 @@ namespace ConsoleTranslation
             }
         }
 
-        public TranslatorHelper(ITranslator translator)
+
+        public TranslatorHelper(ITranslator translator) : this(translator, new[] { '\0' })
         {
-            _translator = translator;
-            _blockSize = _translator.MaxTextLengthCanSend;
-            _useNewLineToSplitAtEnd = true;
-            CharsToSplitAtEnd = CharsToSplitAtEndDefault;
+            UseNewLineToSplitAtEnd = true;
         }
 
         public TranslatorHelper(ITranslator translator, char[] charsToSplitAtEnd)
         {
             _translator = translator;
+            if (translator == null)
+                throw new Exception("Parameter 'translator' is null.");
+
             _blockSize = _translator.MaxTextLengthCanSend;
-            _useNewLineToSplitAtEnd = false;
-            CharsToSplitAtEnd = charsToSplitAtEnd;
+            //UseNewLineToSplitAtEnd = false;  is default value of bool
+
+            if (charsToSplitAtEnd == null)
+                throw new Exception("Parameter 'charsToSplitAtEndText' is null.");
+
+            if (charsToSplitAtEnd.Length > 0)
+                CharsToSplitAtEnd = charsToSplitAtEnd;
+            else
+                throw new Exception("Parameter 'charsToSplitAtEndText.length' is less than 1.");
         }
 
         public async Task<string> GenerateStringFromBlockListAsync(List<string> blockList)
@@ -74,118 +83,12 @@ namespace ConsoleTranslation
             return stringBuilder.ToString();
         }
 
-        public async Task<List<string>> GenerateBlockListFromStringAsync(string text)
+        public async Task<string> TranslateTextAsync(string text, string sourceLang, string targetLang)
         {
             ValidateText(text);
-            ValidationBlockSize();
+            ValidateLanguages(sourceLang, targetLang);
 
-            List<string> sourceBlockList = await CreateBlockListAsync(text);
-
-            return sourceBlockList;
-        }
-
-
-        private async Task<List<string>> CreateBlockListAsync(string text)
-        {
-            await Task.Yield();
-
-            bool findOnlyOneChar = _charsToSplitAtEnd.Length == 1;
-            int pos = 0;
-            string temp = string.Empty;
-            int maxBlockSize = 0;
-            int realLength = 0;
-            List<string> blockList = new();
-
-            try
-            {
-                while (pos < text.Length)
-                {
-                    //if (blockList.Count > 3)
-                    //    Console.WriteLine("xxxxxxxxxx");
-
-                    //if ((pos + blockSize) < text.Length)
-                    //    maxBlockSize = (pos + blockSize);
-                    //else
-                    //{
-                    //    maxBlockSize = text.Length;
-                    //    isLast = true;
-                    //}
-
-                    // 1. Define o tamanho máximo que podemos ler a partir da posição atual
-                    maxBlockSize = Math.Min(pos + _blockSize, text.Length); // - pos);
-
-                    // 2. Tira o pedaço provisório (a nova string a analisar)
-                    temp = text.Substring(pos, maxBlockSize - pos);
-
-                    // 3. Procura o últimofindOneChar trás para a frente dentro deste pedaço
-
-                    if (maxBlockSize >= text.Length)
-                        realLength = text.Length;
-                    else
-                    {
-                        if (_useNewLineToSplitAtEnd)
-                        {
-                            realLength = temp.LastIndexOf(System.Environment.NewLine);
-                        }
-                        else
-                        {
-                            if (findOnlyOneChar)
-                                realLength = temp.LastIndexOf(_charsToSplitAtEnd);
-                            else
-                                realLength = temp.LastIndexOfAny(_charsToSplitAtEnd);
-                        }
-                    }
-
-                    // Se encontrou um ponto E não é o último bloco completo do texto
-                    if (realLength != -1 && (pos + maxBlockSize) < text.Length)
-                    {
-                        // O tamanho real do corte será até ao ponto (incluindo o ponto)
-                        //int realLength = lastPos;// + 1;
-
-                        // Recorta a string final com o tamanho corrigido
-                        string pedacoFinal = temp.Substring(0, realLength);
-                        blockList.Add(pedacoFinal);
-
-                        // O loop avança exatamente para a posição a seguir ao ponto
-                        pos += realLength;
-                    }
-                    else
-                    {
-                        // Se não houver ponto (ou se for o fim do texto), aceita o pedaço inteiro
-                        blockList.Add(temp);
-                        pos += temp.Length;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-
-
-        
-            //return Task.CompletedTask; //if return is void blockList;
-            //return Task.FromResult(blocos);  parece que não que async na defenição
-
-            return blockList;
-        }
-
-        //private async Task<List<string>> TranslateBlockListAsync(List<string> sourceList, string sourceLang, string targtLang)
-        //{
-        //    List<string> targetList = new();
-
-        //    foreach (string item in sourceList)
-        //    {
-        //        string text = await _translatator.TranslateAsync(item, sourceLang, targtLang);
-        //        targetList.Add(text);
-        //    }
-
-        //    return targetList;
-        //}
-
-        public async Task<string> TranslateTextAsync(string shortText, string sourceLang, string targetLang)
-        {
-            string translatedText = await _translator.TranslateAsync(shortText, sourceLang, targetLang);
+            string translatedText = await _translator.TranslateAsync(text, sourceLang, targetLang);
 
             return translatedText;
         }
@@ -247,8 +150,11 @@ namespace ConsoleTranslation
             if (text == null)
                 throw new Exception("text is null.");
 
-            if (text.Length > _blockSize)
-                throw new Exception($"Text length is {text.Length} but cannot be longer than [{_blockSize}.");
+            //if (text.Length < _blockSize)
+            //    _blockSize = text.Length;
+
+            //if (text.Length > _blockSize)
+            //    throw new Exception($"Text length is {text.Length} but cannot be longer than [{_blockSize}.");
         }
 
         private void ValidateLanguages(string sourceLang, string targtLang)
@@ -261,6 +167,72 @@ namespace ConsoleTranslation
 
             //if (charsToFind is null || charsToFind.Length == 0)
             //    throw new Exception("char[] charsToFind is empty.");
+        }
+
+
+        public async Task<List<string>> GenerateBlockListFromStringAsync(string text)
+        {
+            await Task.Yield();
+            
+            ValidateText(text);
+            ValidationBlockSize();
+
+            List<string> blockList = new List<string>();
+
+            if (string.IsNullOrEmpty(text))
+                return blockList;
+
+            int currentPos = 0;
+            int textLength = text.Length;
+
+            while (currentPos < textLength)
+            {
+                // Se o texto restante for menor que o limite, adiciona tudo e termina
+                if ((currentPos + _blockSize) >= textLength)
+                {
+                    blockList.Add(text.Substring(currentPos));
+                    break;
+                }
+
+                // Obtém o bloco inicial de 5000 caracteres
+                string tempBlock = text.Substring(currentPos, _blockSize);
+
+                // Procura a última ocorrência de quebra de linha dentro deste bloco
+                int lastPos = FindLastControlCharsPosition(tempBlock);
+
+                if (lastPos != -1)
+                {
+                    // Corta até à quebra de linha (incluindo o caractere \n)
+                    int newPos = lastPos + 1;
+                    blockList.Add(tempBlock.Substring(0, newPos));
+                    currentPos += newPos;
+                }
+                else
+                {
+                    // Se não houver quebra de linha, corta nos 5000 caracteres exatos
+                    blockList.Add(tempBlock);
+                    currentPos += _blockSize;
+                }
+            }
+
+            return blockList;
+        }
+
+        private int FindLastControlCharsPosition(string text)
+        {
+            int lastPos = text.Length;
+
+            if (_useNewLineToSplitAtEnd)
+                lastPos = text.LastIndexOf(System.Environment.NewLine);
+            else
+            {
+                if (_findOnlyByOneChar)
+                    lastPos = text.LastIndexOf(_charsToSplitAtEnd);
+                else
+                    lastPos = text.LastIndexOfAny(_charsToSplitAtEnd);
+            }
+
+            return lastPos;
         }
     }
 }
