@@ -9,6 +9,15 @@ using System.Threading.Tasks;
 
 namespace Candal.Translation
 {
+    //NOTE-02:
+    //
+    //result = await Task.Run(() => {...}
+    //VS
+    //result = await Task.Run(ASYNC () => { await ...}
+    //
+    //Usa-se async na assinatura do lambda se dentro da função chamada existe await (I/O bound)
+    //Quem garante a libertação da thread UI é o await.
+    //
     public sealed class TranslatorHelperUserInterface : TranslatorHelper
     {
         #region Fields
@@ -41,8 +50,7 @@ namespace Candal.Translation
             {
                 //cancellationToken.ThrowIfCancellationRequested();
 
-                //nao async na assinatura do lambda precisa porque GenerateBlockListFromStringAsync nao tem await !!!
-                //result = await Task.Run(async () => await GenerateBlockListFromStringAsync(text, cancellationToken), cancellationToken);
+                //See NOTE-02:
                 result = await Task.Run(() => base.GenerateBlockListFromString(text, cancellationToken), cancellationToken);
             }
             catch (Exception ex)
@@ -61,9 +69,7 @@ namespace Candal.Translation
             {
                 //cancellationToken.ThrowIfCancellationRequested();
 
-                //async na assinatura do lambda; não precisa porque GenerateBlockListFromString nao tem await !!!
-                //result = await Task.Run(ASYNC () => await GenerateBlockListFromStringAsync(text, cancellationToken), cancellationToken);
-
+                //See NOTE-02:
                 result = await Task.Run(() => base.GenerateStringFromBlockList(blockList, cancellationToken), cancellationToken);
             }
             catch (Exception ex)
