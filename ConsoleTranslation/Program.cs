@@ -1,17 +1,39 @@
-﻿using System;
+﻿using Candal.Translation;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace ConsoleTranslation
+namespace Application
 {
     internal static class Program
     {
         internal static int Main(string[] args)
         {
+            string ret;
+            // Obtém o array de assemblies carregados no domínio atual
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                string nome = assemblies[i].GetName().Name;
+
+                if (nome == "System.Windows.Forms") ret= "WinForms";
+                if (nome == "PresentationFramework") ret= "WPF";
+                if (nome == "Microsoft.Maui.Controls") ret= "MAUI";
+                if (nome == "Avalonia.Controls") ret= "Avalonia";
+            }
+
+            ret= "Sem UI (Consola/API/Serviço)";
+        
+
+
+
+
             // Underneath the cover
             // Call asynchronous Main function
             // and waits for the result safely.
@@ -27,7 +49,9 @@ namespace ConsoleTranslation
 
             int ret = 0;
             //CancellationTokenSource cancellationTokenSource = new();
-
+            CancellationTokenSource cancelSource = new();
+            CancellationToken cancelToken = cancelSource.Token;
+            
             try
             {
 
@@ -35,7 +59,7 @@ namespace ConsoleTranslation
                 TranslationData translationData = ValidateArguments(args);
 
                 Console.WriteLine($"Read all file: '{translationData.FileNameIn}'.");
-                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8, cancellationTokenSource);
+                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8, cancelToken);
 
                 //Cloose translator
                 //Libretranslator translator = new();
@@ -43,7 +67,7 @@ namespace ConsoleTranslation
 
                 //Create TranslatorHelper 
                 //using NewLine to split
-                TranslatorHelper translatorHelper = new(translator);
+                TranslatorHelperUserInterface translatorHelper = new(translator);
 
                 //using special chars to split
                 //char[] _charsToSplitAtEnd = new[] { '.', '?' , '!'};
@@ -51,7 +75,7 @@ namespace ConsoleTranslation
 
                 //splits All file string into List<string>
                 Console.WriteLine("Splits all string into List<string>.");
-                List<string> textBlockList = await translatorHelper.GenerateBlockListFromStringAsync(text);
+                List<string> textBlockList = await translatorHelper.GenerateBlockListFromStringAsync(text, cancelToken);
 
                 //translate List<atring>
                 Console.WriteLine("Translate List<atring>.");
@@ -77,6 +101,9 @@ namespace ConsoleTranslation
 
             Console.WriteLine($"Process terminated. Return value:{ret}.");
 
+            Thread.Sleep(10000);
+            cancelSource.Cancel(); // Safely cancel worker.
+            Console.ReadLine();
             return ret;
         }
 

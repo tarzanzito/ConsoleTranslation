@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace ConsoleTranslation
+namespace Candal.Translation
 {
 
     //https://libretranslate.com/languages
 
-    internal sealed class Libretranslator : ITranslator
+    public sealed class Libretranslator : ITranslator
     {
         public const int MAX_TEXT_LENGTH_CAN_SEND = 449;
         private const string TRANSLATOR_URL = "https://libretranslate.com/translate";
@@ -35,11 +35,10 @@ namespace ConsoleTranslation
             }
         }
 
-
-        public async Task<string> TranslateAsync(string shortText, string sourceLang, string targetLang)
+        public async Task<string> TranslateAsync(string text, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
         {
-            if (shortText.Trim() == string.Empty)
-                return shortText;
+            if (text.Trim() == string.Empty)
+                return text;
 
             string? result = null;
 
@@ -49,7 +48,7 @@ namespace ConsoleTranslation
 
                 var body = new
                 {
-                    q = shortText,
+                    q = text,
                     source = sourceLang,
                     target = targetLang,
                     format = "text"
@@ -58,35 +57,42 @@ namespace ConsoleTranslation
                 string json = JsonSerializer.Serialize(body);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var httpResponse = await _httpClient.PostAsync(TRANSLATOR_URL, content);
+                var httpResponse = await _httpClient.PostAsync(TRANSLATOR_URL, content, cancellationToken);
 
                 httpResponse.EnsureSuccessStatusCode();
 
-                string jsonResult = await httpResponse.Content.ReadAsStringAsync();
+                string jsonResult = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
                 result = JsonSerializer.Deserialize<string>(jsonResult);
-                
+
             }
             catch (Exception ex)
             {
-
+                throw;
             }
 
             return result ?? ""; //TODO
-            //return result; //?.TranslatedText ?? ""; //TODO
         }
 
-        public async Task<string> LanguagesAsync()
-        { 
+        public async Task<string> LanguagesAsync(CancellationToken cancellationToken = default)
+        {
+            string? result = null;
 
-            var httpResponse = await _httpClient.GetAsync(TRANSLATOR_URL);
+            try
+            {
+                var httpResponse = await _httpClient.GetAsync(TRANSLATOR_URL);
 
-            httpResponse.EnsureSuccessStatusCode();
+                httpResponse.EnsureSuccessStatusCode();
 
-            string jsonResult = await httpResponse.Content.ReadAsStringAsync();
-            string? result = JsonSerializer.Deserialize<string>(jsonResult);
+                string jsonResult = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+                result = JsonSerializer.Deserialize<string>(jsonResult);
+                result = jsonResult; //TODO:
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
 
-
-            return jsonResult;
+            return result;
             //return result?.TranslatedText ?? ""; TODO
         }
 

@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
-
-
-namespace ConsoleTranslation
+namespace Candal.Translation
 {
-    internal sealed class Googletranslator : ITranslator
+    public sealed class Googletranslator : ITranslator
     {
         public const int MAX_TEXT_LENGTH_CAN_SEND = 4999;
         private const string TRANSLATOR_URL = "https://translate.googleapis.com/translate_a/single";
@@ -27,11 +23,19 @@ namespace ConsoleTranslation
             }
          }
 
-        public async Task<string> TranslateAsync(string shortText, string sourceLang, string targetLang)
+        public string TranslatorUrl
         {
-            int x = shortText.Length;
-            if (shortText.Trim() == string.Empty)
-                return shortText;
+            get
+            {
+                return TRANSLATOR_URL;
+            }
+        }
+
+        public async Task<string> TranslateAsync(string text, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
+        {
+            int x = text.Length;
+            if (text.Trim() == string.Empty)
+                return text;
 
             // "sl" = source language
             // "tl" = target language
@@ -45,9 +49,9 @@ namespace ConsoleTranslation
 
             try
             {
-                await Task.Delay(FORCE_DELAY);
+                await Task.Delay(FORCE_DELAY); //fpr google not reject 
 
-                string queryString = $"client=gtx&sl={sourceLang}&tl={targetLang}&dt=t&q={WebUtility.UrlEncode(shortText)}";
+                string queryString = $"client=gtx&sl={sourceLang}&tl={targetLang}&dt=t&q={WebUtility.UrlEncode(text)}";
                 string url = $"{TRANSLATOR_URL}?{queryString}";
 
                 string httpResponse = await _httpClient.GetStringAsync(url);
@@ -64,15 +68,10 @@ namespace ConsoleTranslation
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
                 throw;
-            }
-            finally
-            {
             }
 
             return translatedText;
         }
-
     }
 }
