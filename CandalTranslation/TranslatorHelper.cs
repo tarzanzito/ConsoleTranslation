@@ -55,10 +55,10 @@ namespace Candal.Translation
 
         #region Constructors
 
-        public TranslatorHelper(ITranslator translator) : this(translator, new[] { '\0' })
-        {
-            UseNewLineToSplitAtEnd = true;
-        }
+        //public TranslatorHelper(ITranslator translator) : this(translator, new[] { '\0' })
+        //{
+        //    UseNewLineToSplitAtEnd = true;
+        //}
 
         public TranslatorHelper(ITranslator translator, char[] charsToSplitAtEnd)
         {
@@ -67,7 +67,6 @@ namespace Candal.Translation
                 throw new Exception("Parameter 'translator' is null.");
 
             _blockSize = _translator.MaxTextLengthCanSend;
-            //UseNewLineToSplitAtEnd = false;  is default value of bool
 
             if (charsToSplitAtEnd == null)
                 throw new Exception("Parameter 'charsToSplitAtEndText' is null.");
@@ -76,6 +75,8 @@ namespace Candal.Translation
                 CharsToSplitAtEnd = charsToSplitAtEnd;
             else
                 throw new Exception("Parameter 'charsToSplitAtEndText.length' is less than 1.");
+
+            UseNewLineToSplitAtEnd = (charsToSplitAtEnd.Length == 1) && (charsToSplitAtEnd[0] == '\0');
         }
 
         #endregion
@@ -83,8 +84,68 @@ namespace Candal.Translation
         #region Public Methods
 
         public abstract Task<List<string>> CreateBlockListFromStringAsync(string text, CancellationToken cancellationToken = default);
-        public abstract Task<string> CreateStringFromBlockList(List<string> blockList, CancellationToken cancellationToken = default);
+        
+        public abstract Task<string> CreateStringFromBlockListAsync(List<string> blockList, CancellationToken cancellationToken = default);
+                                     
+        public async Task<string> TranslateTextAsync(string text, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
+        {
+            string translatedText = string.Empty;
 
+            try
+            {
+                ValidateText(text);
+                ValidateLanguages(sourceLang, targetLang);
+
+                translatedText = await _translator.TranslateAsync(text, sourceLang, targetLang, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return translatedText;
+        }
+
+        public async Task<List<string>> TranslateBlockListAsync(List<string> blockList, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
+        {
+            List<string> translatedList = new();
+
+            try
+            {
+                //cancellationToken.ThrowIfCancellationRequested();
+
+                ValidateBlockList(blockList);
+
+                bool validateLangs = true;
+
+                foreach (string item in blockList)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    ValidateText(item);
+
+                    if (validateLangs)
+                    {
+                        ValidateLanguages(sourceLang, targetLang);
+                        validateLangs = false;
+                    }
+
+                    string translatedText = await _translator.TranslateAsync(item, sourceLang, targetLang, cancellationToken);
+
+                    translatedList.Add(translatedText);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return translatedList;
+        }
+        
+        #endregion
+
+        #region Protected Methods
 
         protected string GenerateStringFromBlockList(List<string> blockList, CancellationToken cancellationToken = default)
         {
@@ -111,10 +172,6 @@ namespace Candal.Translation
 
             return result;
         }
-
-
-
-        #endregion
 
         protected List<string> GenerateBlockListFromString(string text, CancellationToken cancellationToken = default)
         {
@@ -188,63 +245,7 @@ namespace Candal.Translation
         //    return result;
         //}
 
-        
-
-        public async Task<string> TranslateTextAsync(string text, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
-        {
-            string translatedText = string.Empty;
-
-            try
-            {
-                ValidateText(text);
-                ValidateLanguages(sourceLang, targetLang);
-
-                translatedText = await _translator.TranslateAsync(text, sourceLang, targetLang, cancellationToken);
-            }
-            catch(Exception ex)
-            {
-                throw;
-            }
-
-            return translatedText;
-        }
-
-        public async Task<List<string>> TranslateBlockListAsync(List<string> blockList, string sourceLang, string targetLang, CancellationToken cancellationToken = default)
-        {
-            List<string> translatedList = new();
-
-            try
-            {
-                //cancellationToken.ThrowIfCancellationRequested();
-
-                ValidateBlockList(blockList);
-
-                bool validateLangs = true;
-
-                foreach (string item in blockList)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    ValidateText(item);
-
-                    if (validateLangs)
-                    {
-                        ValidateLanguages(sourceLang, targetLang);
-                        validateLangs = false;
-                    }
-
-                    string translatedText = await _translator.TranslateAsync(item, sourceLang, targetLang, cancellationToken);
-
-                    translatedList.Add(translatedText);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-            return translatedList;
-        }
+        #endregion
 
         #region Private Methods
 

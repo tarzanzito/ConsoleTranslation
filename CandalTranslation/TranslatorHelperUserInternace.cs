@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Candal.Translation
 {
-    public sealed class TranslatorHelperUserInternface : TranslatorHelper
+    public sealed class TranslatorHelperUserInterface : TranslatorHelper
     {
         #region Fields
         #endregion
@@ -19,13 +19,12 @@ namespace Candal.Translation
 
         #region Constructors
 
-        public TranslatorHelperUserInternface(ITranslator translator)
+        public TranslatorHelperUserInterface(ITranslator translator)
             : base(translator, new[] { '\0' })
         {
-            UseNewLineToSplitAtEnd = true;
         }
 
-        public TranslatorHelperUserInternface(ITranslator translator, char[] charsToSplitAtEnd)
+        public TranslatorHelperUserInterface(ITranslator translator, char[] charsToSplitAtEnd)
             : base(translator, charsToSplitAtEnd)
         {
         }
@@ -54,7 +53,7 @@ namespace Candal.Translation
             return result;
         }
 
-        public override async Task<string> CreateStringFromBlockList(List<string> blockList, CancellationToken cancellationToken = default)
+        public override async Task<string> CreateStringFromBlockListAsync(List<string> blockList, CancellationToken cancellationToken = default)
         {
             string result = string.Empty;
 
@@ -62,8 +61,9 @@ namespace Candal.Translation
             {
                 //cancellationToken.ThrowIfCancellationRequested();
 
-                //nao async na assinatura do lambda precisa porque GenerateBlockListFromStringAsync nao tem await !!!
-                //result = await Task.Run(async () => await GenerateBlockListFromStringAsync(text, cancellationToken), cancellationToken);
+                //async na assinatura do lambda; não precisa porque GenerateBlockListFromString nao tem await !!!
+                //result = await Task.Run(ASYNC () => await GenerateBlockListFromStringAsync(text, cancellationToken), cancellationToken);
+
                 result = await Task.Run(() => base.GenerateStringFromBlockList(blockList, cancellationToken), cancellationToken);
             }
             catch (Exception ex)

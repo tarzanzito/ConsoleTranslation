@@ -22,7 +22,6 @@ namespace Candal.Translation
         public TranslatorHelperApiRest(ITranslator translator)
             : base(translator, new[] { '\0' })
         {
-            UseNewLineToSplitAtEnd = true;
         }
 
         public TranslatorHelperApiRest(ITranslator translator, char[] charsToSplitAtEnd)
@@ -52,7 +51,7 @@ namespace Candal.Translation
             return result;
         }
 
-        public override async Task<string> CreateStringFromBlockList(List<string> blockList, CancellationToken cancellationToken = default)
+        public override async Task<string> CreateStringFromBlockListAsync(List<string> blockList, CancellationToken cancellationToken = default)
         {
             string result = string.Empty;
 

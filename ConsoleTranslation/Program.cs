@@ -14,21 +14,21 @@ namespace Application
     {
         internal static int Main(string[] args)
         {
-            string ret;
-            // Obtém o array de assemblies carregados no domínio atual
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            //string ret;
+            //// Obtém o array de assemblies carregados no domínio atual
+            //Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            for (int i = 0; i < assemblies.Length; i++)
-            {
-                string nome = assemblies[i].GetName().Name;
+            //for (int i = 0; i < assemblies.Length; i++)
+            //{
+            //    string nome = assemblies[i].GetName().Name;
 
-                if (nome == "System.Windows.Forms") ret= "WinForms";
-                if (nome == "PresentationFramework") ret= "WPF";
-                if (nome == "Microsoft.Maui.Controls") ret= "MAUI";
-                if (nome == "Avalonia.Controls") ret= "Avalonia";
-            }
+            //    if (nome == "System.Windows.Forms") ret= "WinForms";
+            //    if (nome == "PresentationFramework") ret= "WPF";
+            //    if (nome == "Microsoft.Maui.Controls") ret= "MAUI";
+            //    if (nome == "Avalonia.Controls") ret= "Avalonia";
+            //}
 
-            ret= "Sem UI (Consola/API/Serviço)";
+            //ret= "Sem UI (Consola/API/Serviço)";
         
 
 
@@ -43,14 +43,11 @@ namespace Application
         //renamed Main to MainAsync
         internal static async Task<int> MainAsync(string[] args)
         {
-            //falta o CancellationToken cancellationToken  !!!!!!!!!
-
             Console.WriteLine("Google Translate (Version: 1.1.5");
 
             int ret = 0;
-            //CancellationTokenSource cancellationTokenSource = new();
-            CancellationTokenSource cancelSource = new();
-            CancellationToken cancelToken = cancelSource.Token;
+            CancellationTokenSource cancellationTokenSource = new();
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
             
             try
             {
@@ -59,7 +56,7 @@ namespace Application
                 TranslationData translationData = ValidateArguments(args);
 
                 Console.WriteLine($"Read all file: '{translationData.FileNameIn}'.");
-                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8, cancelToken);
+                string text = await File.ReadAllTextAsync(translationData.FileNameIn, Encoding.UTF8, cancellationToken);
 
                 //Cloose translator
                 //Libretranslator translator = new();
@@ -68,6 +65,7 @@ namespace Application
                 //Create TranslatorHelper 
                 //using NewLine to split
                 TranslatorHelperUserInterface translatorHelper = new(translator);
+                //TranslatorHelperApiRest translatorHelper = new(translator);
 
                 //using special chars to split
                 //char[] _charsToSplitAtEnd = new[] { '.', '?' , '!'};
@@ -75,23 +73,26 @@ namespace Application
 
                 //splits All file string into List<string>
                 Console.WriteLine("Splits all string into List<string>.");
-                List<string> textBlockList = await translatorHelper.GenerateBlockListFromStringAsync(text, cancelToken);
+                List<string> textBlockList = await translatorHelper.CreateBlockListFromStringAsync(text, cancellationToken);
 
+                
                 //translate List<atring>
                 Console.WriteLine("Translate List<atring>.");
-                //List<string> translatedTextBlockList = await translatorHelper.TranslateBlockListAsync(textBlockList, translationData.SourceLang, translationData.TargetLang);
+                List<string> translatedTextBlockList = await translatorHelper.TranslateBlockListAsync(textBlockList, translationData.SourceLang, translationData.TargetLang, cancellationToken);
 
                 //for only compare in and out files. must be equals
-                List<string> translatedTextBlockList = textBlockList;
+                //List<string> translatedTextBlockList = textBlockList;
 
                 //join List<string> into one string
                 Console.WriteLine("Koin translated List<string> into one string.");
-                string result = await translatorHelper.GenerateStringFromBlockListAsync(translatedTextBlockList);
+                string result = await translatorHelper.CreateStringFromBlockListAsync(translatedTextBlockList);
 
                 //Write translated file
                 Console.WriteLine($"Write all string into file: '{translationData.FileNameOut}'.");
 
                 await File.WriteAllTextAsync(translationData.FileNameOut, result, Encoding.UTF8);
+
+                string  test = await translatorHelper.TranslateTextAsync(text, translationData.SourceLang, translationData.TargetLang, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -101,8 +102,8 @@ namespace Application
 
             Console.WriteLine($"Process terminated. Return value:{ret}.");
 
-            Thread.Sleep(10000);
-            cancelSource.Cancel(); // Safely cancel worker.
+            Thread.Sleep(1000);
+            //cancellationTokenSource.Cancel(); // Safely cancel worker.
             Console.ReadLine();
             return ret;
         }
