@@ -1,0 +1,13 @@
+public async Task<IActionResult> ObterDadosAgregados()
+{
+    // Inicia todas as tarefas ao mesmo tempo sem bloquear threads
+    Task<string> dadosBDTask = _bancoDados.BuscarClientesAsync();
+    Task<string> dadosApiTask = _apiExterna.BuscarFreteAsync();
+
+    // Aguarda a finalização de todas em paralelo
+    await Task.WhenAll(dadosBDTask, dadosApiTask);
+
+    // Processa os resultados
+    var resultado = NovoResultado(dadosBDTask.Result, dadosApiTask.Result);
+    return Ok(resultado);
+}

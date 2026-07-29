@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace Candal.Translation
 {
+    public delegate TranslatorMessage TranslatorHandler(string message, int type);
+
+    public class TranslatorMessage
+    {
+        public string Message { get; init; } = string.Empty;
+        public int Type { get; init; }
+    }
+
     public abstract class TranslatorHelper
     {
         #region Fields
@@ -20,6 +28,12 @@ namespace Candal.Translation
         private bool _useNewLineToSplitAtEnd;
         private char[] _charsToSplitAtEnd = new[] { '\0' };
         private bool _findOnlyByOneChar;
+
+        #endregion
+
+        #region Events
+
+        public event TranslatorHandler TranslatorMessageEvent;
 
         #endregion
 
@@ -159,6 +173,8 @@ namespace Candal.Translation
 
                 foreach (string item in blockList)
                 {
+                    OnProcessCompleted("example", 1);
+
                     cancellationToken.ThrowIfCancellationRequested();
                     stringBuilder.Append(item);
                 }
@@ -300,6 +316,11 @@ namespace Candal.Translation
             }
 
             return lastPos;
+        }
+        private void OnProcessCompleted(string message, int type)
+        {
+            if (TranslatorMessageEvent != null)
+                TranslatorMessageEvent(message, type);
         }
 
         #endregion

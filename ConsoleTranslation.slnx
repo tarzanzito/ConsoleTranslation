@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="CandalTranslation/CandalTranslation.csproj" Id="39a704fc-bb2c-4b2c-99bd-3eaa5b979141" />
   <Project Path="ConsoleTranslation/ConsoleTranslation.csproj" />
+  <Project Path="WinFormsTranslator/WinFormsTranslator.csproj" Id="cb14c8f3-3628-4175-b938-c24b8885d6a1" />
 </Solution>
