@@ -48,7 +48,7 @@
             buttonClose.Location = new Point(490, 68);
             buttonClose.Name = "buttonClose";
             buttonClose.Size = new Size(72, 33);
-            buttonClose.TabIndex = 1;
+            buttonClose.TabIndex = 32;
             buttonClose.Text = "Close";
             buttonClose.UseVisualStyleBackColor = true;
             buttonClose.Click += buttonClose_Click;
@@ -56,6 +56,7 @@
             // comboBoxSourceLang
             // 
             comboBoxSourceLang.FormattingEnabled = true;
+            comboBoxSourceLang.ItemHeight = 15;
             comboBoxSourceLang.Location = new Point(102, 52);
             comboBoxSourceLang.Name = "comboBoxSourceLang";
             comboBoxSourceLang.Size = new Size(120, 23);
@@ -66,6 +67,7 @@
             // comboBoxTargeLang
             // 
             comboBoxTargeLang.FormattingEnabled = true;
+            comboBoxTargeLang.ItemHeight = 15;
             comboBoxTargeLang.Location = new Point(102, 80);
             comboBoxTargeLang.Name = "comboBoxTargeLang";
             comboBoxTargeLang.Size = new Size(120, 23);
@@ -78,13 +80,12 @@
             textBoxFileName.Location = new Point(102, 25);
             textBoxFileName.Name = "textBoxFileName";
             textBoxFileName.Size = new Size(425, 23);
-            textBoxFileName.TabIndex = 4;
+            textBoxFileName.TabIndex = 1;
             textBoxFileName.TextChanged += textBoxFileName_TextChanged;
             textBoxFileName.DoubleClick += textBoxFileName_DoubleClick;
             // 
             // label1
             // 
-            label1.BorderStyle = BorderStyle.FixedSingle;
             label1.Location = new Point(10, 24);
             label1.Name = "label1";
             label1.Size = new Size(86, 22);
@@ -102,7 +103,6 @@
             // 
             // label2
             // 
-            label2.BorderStyle = BorderStyle.FixedSingle;
             label2.Location = new Point(10, 52);
             label2.Name = "label2";
             label2.Size = new Size(86, 21);
@@ -112,7 +112,6 @@
             // 
             // label3
             // 
-            label3.BorderStyle = BorderStyle.FixedSingle;
             label3.Location = new Point(10, 79);
             label3.Name = "label3";
             label3.Size = new Size(86, 22);
@@ -126,7 +125,7 @@
             listBox1.Location = new Point(10, 135);
             listBox1.Name = "listBox1";
             listBox1.Size = new Size(552, 169);
-            listBox1.TabIndex = 10;
+            listBox1.TabIndex = 41;
             // 
             // buttonExploreFile
             // 
@@ -142,7 +141,7 @@
             buttonProcessCancel.Location = new Point(389, 68);
             buttonProcessCancel.Name = "buttonProcessCancel";
             buttonProcessCancel.Size = new Size(95, 33);
-            buttonProcessCancel.TabIndex = 0;
+            buttonProcessCancel.TabIndex = 31;
             buttonProcessCancel.Text = "Translate File";
             buttonProcessCancel.UseVisualStyleBackColor = true;
             buttonProcessCancel.Click += buttonProcessCancel_Click;
@@ -152,13 +151,12 @@
             buttonOpenFolder.Location = new Point(249, 68);
             buttonOpenFolder.Name = "buttonOpenFolder";
             buttonOpenFolder.Size = new Size(95, 33);
-            buttonOpenFolder.TabIndex = 9;
+            buttonOpenFolder.TabIndex = 21;
             buttonOpenFolder.Text = "Open Folder";
             buttonOpenFolder.UseVisualStyleBackColor = true;
             // 
             // label4
             // 
-            label4.BorderStyle = BorderStyle.FixedSingle;
             label4.Location = new Point(10, 110);
             label4.Name = "label4";
             label4.Size = new Size(86, 22);
@@ -190,6 +188,7 @@
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Translator";
+            FormClosing += Form1_FormClosing;
             Load += Form1_Load;
             DragDrop += Form1_DragDrop;
             DragEnter += Form1_DragEnter;

@@ -2,27 +2,31 @@ using System.Drawing.Text;
 
 namespace WinFormsTranslator
 {
-    internal enum ScreenState
-    {
-        DisableAllInput,
-        InputDataIncompleted,       // (button process DISABLE)
-        InputDataAndReadyToProcess, // (button process ENABLED)
-        ProcessStarted,
-        ProcessCancelled
-    }
-
     public partial class Form1 : Form
     {
+        #region Fields
+
         private ScreenState _currScreenState;
         private ScreenState _lastScreenState;
+        private readonly string ButtonProcessTile = string.Empty;
+        private readonly string ButtonCancelTitle = string.Empty;
+        private readonly string ButtonUndoTitle = string.Empty;
         private string _targetFolder = string.Empty;
-        private const string ButtonProcessTitle = "Process";
-        private const string ButtonCancelTitle = "Cancel";
+
+        #endregion
+
+        #region Constructor
 
         public Form1()
         {
+            ButtonProcessTile = "Process";
+            ButtonCancelTitle = "Cancel";
+            ButtonUndoTitle = "Undo...";
+
             InitializeComponent();
         }
+
+        #endregion
 
         #region Private Methods
 
@@ -36,16 +40,16 @@ namespace WinFormsTranslator
             await Task.Delay(15000);
         }
 
-        private void ChangeScreenState(string sender)
+        private void ChangeScreenState()
         {
-            listBox1.Items.Add($"{sender}, Curr ScreenState: {_currScreenState}, Last Screen State: {_lastScreenState}");
+            listBox1.Items.Add($"Curr ScreenState: {_currScreenState.ToString()}, Last Screen State: {_lastScreenState.ToString()}");
 
             if (_currScreenState == _lastScreenState)
                 return;
 
             switch (_currScreenState)
             {
-                case ScreenState.DisableAllInput:
+                case ScreenState.AllDisabled:
                     textBoxFileName.Enabled = false;
                     comboBoxSourceLang.Enabled = false;
                     comboBoxTargeLang.Enabled = false;
@@ -57,7 +61,7 @@ namespace WinFormsTranslator
 
                     listBox1.Enabled = false;
 
-                    buttonProcessCancel.Text = ButtonProcessTitle;
+                    buttonProcessCancel.Text = ButtonProcessTile;
 
                     Cursor = Cursors.Default;
                     buttonProcessCancel.Cursor = Cursors.Default;
@@ -77,9 +81,9 @@ namespace WinFormsTranslator
                     buttonProcessCancel.Enabled = false;
                     buttonOpenFolder.Enabled = (_targetFolder.Length > 0);
 
-                    listBox1.Enabled = false;
+                    listBox1.Enabled = true;
 
-                    buttonProcessCancel.Text = ButtonProcessTitle;
+                    buttonProcessCancel.Text = ButtonProcessTile;
 
                     Cursor = Cursors.Default;
                     buttonProcessCancel.Cursor = Cursors.Default;
@@ -88,7 +92,7 @@ namespace WinFormsTranslator
                     break;
 
                 //input data - WITH condition to process (button process ENABLE)
-                case ScreenState.InputDataAndReadyToProcess:
+                case ScreenState.InputDataReadyToProcessing:
                     textBoxFileName.Enabled = true;
                     comboBoxSourceLang.Enabled = true;
                     comboBoxTargeLang.Enabled = true;
@@ -98,9 +102,9 @@ namespace WinFormsTranslator
                     buttonProcessCancel.Enabled = true;
                     buttonOpenFolder.Enabled = false;
 
-                    listBox1.Enabled = false;
+                    listBox1.Enabled = true;
 
-                    buttonProcessCancel.Text = ButtonProcessTitle;
+                    buttonProcessCancel.Text = ButtonProcessTile;
 
                     Cursor = Cursors.Default;
                     buttonProcessCancel.Cursor = Cursors.Default;
@@ -119,7 +123,7 @@ namespace WinFormsTranslator
                     buttonProcessCancel.Enabled = true;
                     buttonOpenFolder.Enabled = false;
 
-                    listBox1.Enabled = false;
+                    listBox1.Enabled = true;
 
                     buttonProcessCancel.Text = ButtonCancelTitle;
 
@@ -139,9 +143,9 @@ namespace WinFormsTranslator
                     buttonProcessCancel.Enabled = false;
                     buttonOpenFolder.Enabled = false;
 
-                    listBox1.Enabled = false;
+                    listBox1.Enabled = true;
 
-                    buttonProcessCancel.Text = "Undo...";
+                    buttonProcessCancel.Text = ButtonUndoTitle;
 
                     Cursor = Cursors.WaitCursor;
                     buttonProcessCancel.Cursor = Cursors.WaitCursor;
@@ -191,61 +195,90 @@ namespace WinFormsTranslator
             return true;
         }
 
-        private async Task PrepareAtionAsync()
+        private void BeforeProcessStartOrCancel()
         {
-            //before
+            //before execute
             switch (_currScreenState)
             {
-                case ScreenState.InputDataAndReadyToProcess:
+                case ScreenState.InputDataReadyToProcessing:
                     _currScreenState = ScreenState.ProcessStarted;
-                    ChangeScreenState("process");
+                    ChangeScreenState();
                     break;
 
                 case ScreenState.ProcessStarted:
                     _currScreenState = ScreenState.ProcessCancelled;
-                    ChangeScreenState("cancel");
+                    ChangeScreenState();
                     break;
 
                 default:
                     return;
             }
+        }
 
-            //action
-            if (_currScreenState == ScreenState.ProcessStarted)
+        private async Task ExecuteProcessStartOrCancelAsync()
+        {
+            //execute action
+            switch (_currScreenState)
             {
-                await ExecuteAtionAsync();
-                this.listBox1.Items.Add("After Process !!!!");
-            }
+                case ScreenState.ProcessStarted:
+                    await TaskExecuteAsync();
+                    this.listBox1.Items.Add("After Process !!!!");
+                    break;
 
-            if (_currScreenState == ScreenState.ProcessCancelled)
-            {
-                //Cancel
-                await CancelAtionAsync();
-                this.listBox1.Items.Add("After CANCEL !!!!");
-            }
+                case ScreenState.ProcessCancelled:
+                    //Cancel
+                    await TaskCancelAsync();
+                    this.listBox1.Items.Add("After CANCEL !!!!");
+                    break;
 
-            //after
-            _currScreenState = ScreenState.InputDataAndReadyToProcess;
-            ChangeScreenState("buttonProcessCancel");
+                default:
+                    return;
+            }
+        }
+
+        private async Task TaskExecuteAsync()
+        {
+
+        }
+
+        private async Task TaskCancelAsync()
+        {
+
+        }
+
+        private void AfterProcessStartOrCancel()
+        {
+            //after execute
+            _currScreenState = ScreenState.InputDataReadyToProcessing;
+            ChangeScreenState();
         }
 
         private void TextChangedAll()
         {
-            if (IsInputDataEnabled())
+            if (!IsInputDataEnabled())
                 return;
 
             if (IsValidInputData())
-                _currScreenState = ScreenState.InputDataAndReadyToProcess;
+                _currScreenState = ScreenState.InputDataReadyToProcessing;
             else
                 _currScreenState = ScreenState.InputDataIncompleted;
 
-            ChangeScreenState("TextChangedAll");
+            ChangeScreenState();
         }
 
         private bool IsInputDataEnabled()
         {
-            return ((_currScreenState == ScreenState.InputDataAndReadyToProcess)
-                || (_currScreenState != ScreenState.InputDataIncompleted));
+            return ((_currScreenState == ScreenState.InputDataIncompleted)
+                || (_currScreenState == ScreenState.InputDataReadyToProcessing));
+        }
+
+        private async Task ProcessOrCancelAsync()
+        {
+            BeforeProcessStartOrCancel();
+            //await ProcessCancelAsync();
+            await ExecuteProcessStartOrCancelAsync();
+            await Task.Delay(5000);
+            AfterProcessStartOrCancel();
         }
 
         #endregion
@@ -255,12 +288,15 @@ namespace WinFormsTranslator
         private void Form1_Load(object sender, EventArgs e)
         {
             _currScreenState = ScreenState.InputDataIncompleted;
-            _lastScreenState = ScreenState.DisableAllInput;
+            _lastScreenState = ScreenState.AllDisabled;
 
             _targetFolder = string.Empty;
             listBox1.Items.Clear();
 
-            ChangeScreenState("Load");
+            ChangeScreenState();
+
+            //Application.DoEvents();
+            textBoxFileName.Focus();
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -293,15 +329,17 @@ namespace WinFormsTranslator
         private async void buttonClose_Click(object sender, EventArgs e)
         {
             if (_currScreenState == ScreenState.ProcessStarted)
-                await PrepareAtionAsync();
+            {
+               // await ProcessStartedAsync();
+            }
 
             //espera que cancel termine !!!
             Close();
         }
-  
+
         private async void buttonProcessCancel_Click(object sender, EventArgs e)
         {
-            await PrepareAtionAsync();
+           await ProcessOrCancelAsync();
         }
 
         private void textBoxFileName_TextChanged(object sender, EventArgs e)
@@ -320,5 +358,20 @@ namespace WinFormsTranslator
         }
 
         #endregion
+
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            CloseReason aa = e.CloseReason;
+
+            if (_currScreenState == ScreenState.ProcessStarted)
+            {
+               // await ProcessStartedAsync();
+            }
+
+            //espera que cancel termine !!!
+
+            //espera que cancel termine !!!
+            //Close();
+        }
     }
 }
