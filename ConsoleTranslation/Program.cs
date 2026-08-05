@@ -29,12 +29,8 @@ namespace Application
             //}
 
             //ret= "Sem UI (Consola/API/Serviço)";
-        
 
-
-
-
-            // Underneath the cover
+            // "Underneath the cover"
             // Call asynchronous Main function
             // and waits for the result safely.
             return MainAsync(args).GetAwaiter().GetResult();
