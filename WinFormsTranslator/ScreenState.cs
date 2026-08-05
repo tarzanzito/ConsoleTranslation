@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WinFormsTranslator
 {
-    internal enum ScreenState
+    public enum ScreenState
     {
         AllDisabled,
         InputDataIncompleted,       // (button process DISABLE)

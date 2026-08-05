@@ -98,7 +98,7 @@
             progressBar1.Dock = DockStyle.Top;
             progressBar1.Location = new Point(0, 0);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(571, 10);
+            progressBar1.Size = new Size(572, 10);
             progressBar1.TabIndex = 6;
             // 
             // label2
@@ -135,6 +135,7 @@
             buttonExploreFile.TabIndex = 11;
             buttonExploreFile.Text = "...";
             buttonExploreFile.UseVisualStyleBackColor = true;
+            buttonExploreFile.Click += buttonExploreFile_Click;
             // 
             // buttonProcessCancel
             // 
@@ -169,7 +170,7 @@
             AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(571, 312);
+            ClientSize = new Size(572, 315);
             Controls.Add(label4);
             Controls.Add(buttonExploreFile);
             Controls.Add(listBox1);

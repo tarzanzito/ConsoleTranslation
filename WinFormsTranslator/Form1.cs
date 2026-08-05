@@ -6,23 +6,21 @@ namespace WinFormsTranslator
     {
         #region Fields
 
-        private ScreenState _currScreenState;
-        private ScreenState _lastScreenState;
-        private readonly string ButtonProcessTile = string.Empty;
-        private readonly string ButtonCancelTitle = string.Empty;
-        private readonly string ButtonUndoTitle = string.Empty;
-        private string _targetFolder = string.Empty;
+        private const string ButtonProcessTile = "Process";
+        private const string ButtonCancelTitle = "Cancel";
+        private const string ButtonUndoTitle = "Undo...";
+
+        private ScreenState _currScreenState = ScreenState.InputDataIncompleted;
+        private ScreenState _lastScreenState = ScreenState.AllDisabled;
+
+        private string _initialDirectory = string.Empty;
 
         #endregion
 
-        #region Constructor
+        #region Constructors
 
         public Form1()
         {
-            ButtonProcessTile = "Process";
-            ButtonCancelTitle = "Cancel";
-            ButtonUndoTitle = "Undo...";
-
             InitializeComponent();
         }
 
@@ -40,9 +38,110 @@ namespace WinFormsTranslator
             await Task.Delay(15000);
         }
 
+        private void ChangeScreenStateAllDisabled()
+        {
+            textBoxFileName.Enabled = false;
+            comboBoxSourceLang.Enabled = false;
+            comboBoxTargeLang.Enabled = false;
+
+            buttonClose.Enabled = true;
+            buttonExploreFile.Enabled = false;
+            buttonProcessCancel.Enabled = false;
+            buttonOpenFolder.Enabled = false;
+
+            listBox1.Enabled = false;
+
+            buttonProcessCancel.Text = ButtonProcessTile;
+
+            Cursor = Cursors.Default;
+            buttonProcessCancel.Cursor = Cursors.Default;
+            buttonClose.Cursor = Cursors.Default;
+        }
+
+        private void ChangeScreenStateInputDataIncompleted()
+        {
+            textBoxFileName.Enabled = true;
+            comboBoxSourceLang.Enabled = true;
+            comboBoxTargeLang.Enabled = true;
+
+            buttonClose.Enabled = true;
+            buttonExploreFile.Enabled = true;
+            buttonProcessCancel.Enabled = false;
+            buttonOpenFolder.Enabled = (textBoxFileName.Text.Length > 0);
+
+            listBox1.Enabled = true;
+
+            buttonProcessCancel.Text = ButtonProcessTile;
+
+            Cursor = Cursors.Default;
+            buttonProcessCancel.Cursor = Cursors.Default;
+            buttonClose.Cursor = Cursors.Default;
+        }
+
+        private void ChangeScreenStateInputDataReadyToProcessing()
+        {
+            textBoxFileName.Enabled = true;
+            comboBoxSourceLang.Enabled = true;
+            comboBoxTargeLang.Enabled = true;
+
+            buttonClose.Enabled = true;
+            buttonExploreFile.Enabled = true;
+            buttonProcessCancel.Enabled = true;
+            buttonOpenFolder.Enabled = false;
+
+            listBox1.Enabled = true;
+
+            buttonProcessCancel.Text = ButtonProcessTile;
+
+            Cursor = Cursors.Default;
+            buttonProcessCancel.Cursor = Cursors.Default;
+            buttonClose.Cursor = Cursors.Default;
+        }
+
+        private void ChangeScreenStateProcessStarted()
+        {
+            textBoxFileName.Enabled = false;
+            comboBoxSourceLang.Enabled = false;
+            comboBoxTargeLang.Enabled = false;
+
+            buttonClose.Enabled = true;
+            buttonExploreFile.Enabled = false;
+            buttonProcessCancel.Enabled = true;
+            buttonOpenFolder.Enabled = false;
+
+            listBox1.Enabled = true;
+
+            buttonProcessCancel.Text = ButtonCancelTitle;
+
+            Cursor = Cursors.WaitCursor;
+            buttonProcessCancel.Cursor = Cursors.AppStarting;
+            buttonClose.Cursor = Cursors.AppStarting;
+
+        }
+        
+        private void ChangeScreenStateProcessCancelled()
+        {
+            textBoxFileName.Enabled = false;
+            comboBoxSourceLang.Enabled = false;
+            comboBoxTargeLang.Enabled = false;
+
+            buttonClose.Enabled = true;
+            buttonExploreFile.Enabled = false;
+            buttonProcessCancel.Enabled = false;
+            buttonOpenFolder.Enabled = false;
+
+            listBox1.Enabled = true;
+
+            buttonProcessCancel.Text = ButtonUndoTitle;
+
+            Cursor = Cursors.WaitCursor;
+            buttonProcessCancel.Cursor = Cursors.WaitCursor;
+            buttonClose.Cursor = Cursors.AppStarting;
+        }
+
         private void ChangeScreenState()
         {
-            listBox1.Items.Add($"Curr ScreenState: {_currScreenState.ToString()}, Last Screen State: {_lastScreenState.ToString()}");
+            WriteLog();
 
             if (_currScreenState == _lastScreenState)
                 return;
@@ -50,107 +149,27 @@ namespace WinFormsTranslator
             switch (_currScreenState)
             {
                 case ScreenState.AllDisabled:
-                    textBoxFileName.Enabled = false;
-                    comboBoxSourceLang.Enabled = false;
-                    comboBoxTargeLang.Enabled = false;
-
-                    buttonClose.Enabled = true;
-                    buttonExploreFile.Enabled = false;
-                    buttonProcessCancel.Enabled = false;
-                    buttonOpenFolder.Enabled = false;
-
-                    listBox1.Enabled = false;
-
-                    buttonProcessCancel.Text = ButtonProcessTile;
-
-                    Cursor = Cursors.Default;
-                    buttonProcessCancel.Cursor = Cursors.Default;
-                    buttonClose.Cursor = Cursors.Default;
-
+                    ChangeScreenStateAllDisabled();
                     break;
 
                 //input data - NO condition to process (button process DISABLE)
                 case ScreenState.InputDataIncompleted:
-
-                    textBoxFileName.Enabled = true;
-                    comboBoxSourceLang.Enabled = true;
-                    comboBoxTargeLang.Enabled = true;
-
-                    buttonClose.Enabled = true;
-                    buttonExploreFile.Enabled = true;
-                    buttonProcessCancel.Enabled = false;
-                    buttonOpenFolder.Enabled = (_targetFolder.Length > 0);
-
-                    listBox1.Enabled = true;
-
-                    buttonProcessCancel.Text = ButtonProcessTile;
-
-                    Cursor = Cursors.Default;
-                    buttonProcessCancel.Cursor = Cursors.Default;
-                    buttonClose.Cursor = Cursors.Default;
-
+                    ChangeScreenStateInputDataIncompleted();
                     break;
 
                 //input data - WITH condition to process (button process ENABLE)
                 case ScreenState.InputDataReadyToProcessing:
-                    textBoxFileName.Enabled = true;
-                    comboBoxSourceLang.Enabled = true;
-                    comboBoxTargeLang.Enabled = true;
-
-                    buttonClose.Enabled = true;
-                    buttonExploreFile.Enabled = true;
-                    buttonProcessCancel.Enabled = true;
-                    buttonOpenFolder.Enabled = false;
-
-                    listBox1.Enabled = true;
-
-                    buttonProcessCancel.Text = ButtonProcessTile;
-
-                    Cursor = Cursors.Default;
-                    buttonProcessCancel.Cursor = Cursors.Default;
-                    buttonClose.Cursor = Cursors.Default;
-
+                    ChangeScreenStateInputDataReadyToProcessing();
                     break;
 
                 //Process Started (DISABLE input data)
                 case ScreenState.ProcessStarted:
-                    textBoxFileName.Enabled = false;
-                    comboBoxSourceLang.Enabled = false;
-                    comboBoxTargeLang.Enabled = false;
-
-                    buttonClose.Enabled = true;
-                    buttonExploreFile.Enabled = false;
-                    buttonProcessCancel.Enabled = true;
-                    buttonOpenFolder.Enabled = false;
-
-                    listBox1.Enabled = true;
-
-                    buttonProcessCancel.Text = ButtonCancelTitle;
-
-                    Cursor = Cursors.WaitCursor;
-                    buttonProcessCancel.Cursor = Cursors.AppStarting;
-                    buttonClose.Cursor = Cursors.AppStarting;
+                    ChangeScreenStateProcessStarted();
                     break;
 
                 //Process Cancelled (DISABLE input data)
                 case ScreenState.ProcessCancelled:
-                    textBoxFileName.Enabled = false;
-                    comboBoxSourceLang.Enabled = false;
-                    comboBoxTargeLang.Enabled = false;
-
-                    buttonClose.Enabled = true;
-                    buttonExploreFile.Enabled = false;
-                    buttonProcessCancel.Enabled = false;
-                    buttonOpenFolder.Enabled = false;
-
-                    listBox1.Enabled = true;
-
-                    buttonProcessCancel.Text = ButtonUndoTitle;
-
-                    Cursor = Cursors.WaitCursor;
-                    buttonProcessCancel.Cursor = Cursors.WaitCursor;
-                    buttonClose.Cursor = Cursors.AppStarting;
-
+                    ChangeScreenStateProcessCancelled();
                     break;
             }
 
@@ -222,13 +241,13 @@ namespace WinFormsTranslator
             {
                 case ScreenState.ProcessStarted:
                     await TaskExecuteAsync();
-                    this.listBox1.Items.Add("After Process !!!!");
+                    WriteLog("After Process !!!!");
                     break;
 
                 case ScreenState.ProcessCancelled:
                     //Cancel
                     await TaskCancelAsync();
-                    this.listBox1.Items.Add("After CANCEL !!!!");
+                    WriteLog("After CANCEL !!!!");
                     break;
 
                 default:
@@ -281,18 +300,44 @@ namespace WinFormsTranslator
             AfterProcessStartOrCancel();
         }
 
+        private string OpenFileDialog()
+        {
+            OpenFileDialog openFileDialog1 = new();
+
+            if (_initialDirectory == string.Empty)
+                _initialDirectory = "c:\\";
+
+            openFileDialog1.InitialDirectory = _initialDirectory;
+            openFileDialog1.Filter = "Subtitle files (*.srt, *.sub, *.txt|*.srt;*.sub;*.txt";
+            openFileDialog1.FilterIndex = 0;
+            openFileDialog1.RestoreDirectory = true;
+
+            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+                return string.Empty;
+
+            _initialDirectory = System.IO.Path.GetDirectoryName(openFileDialog1.FileName) ?? string.Empty;
+
+            return openFileDialog1.FileName;
+
+        }
+
+
+        private void WriteLog(string message = "")
+        {
+#if DEBUG
+            if (message == string.Empty)
+                listBox1.Items.Add($"Curr ScreenState: {_currScreenState}, Last Screen State: {_lastScreenState}");
+            else
+                listBox1.Items.Add($"Msg: {message}");
+#endif
+        }
+
         #endregion
 
         #region Visual Event Methods
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _currScreenState = ScreenState.InputDataIncompleted;
-            _lastScreenState = ScreenState.AllDisabled;
-
-            _targetFolder = string.Empty;
-            listBox1.Items.Clear();
-
             ChangeScreenState();
 
             //Application.DoEvents();
@@ -330,7 +375,7 @@ namespace WinFormsTranslator
         {
             if (_currScreenState == ScreenState.ProcessStarted)
             {
-               // await ProcessStartedAsync();
+                // await ProcessStartedAsync();
             }
 
             //espera que cancel termine !!!
@@ -339,7 +384,7 @@ namespace WinFormsTranslator
 
         private async void buttonProcessCancel_Click(object sender, EventArgs e)
         {
-           await ProcessOrCancelAsync();
+            await ProcessOrCancelAsync();
         }
 
         private void textBoxFileName_TextChanged(object sender, EventArgs e)
@@ -357,21 +402,24 @@ namespace WinFormsTranslator
             TextChangedAll();
         }
 
-        #endregion
+        private void buttonExploreFile_Click(object sender, EventArgs e)
+        {
+            textBoxFileName.Text = OpenFileDialog();
+        }
 
         private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CloseReason aa = e.CloseReason;
-
             if (_currScreenState == ScreenState.ProcessStarted)
             {
-               // await ProcessStartedAsync();
             }
-
-            //espera que cancel termine !!!
-
-            //espera que cancel termine !!!
-            //Close();
         }
+
+        #endregion
+
+
+
+
+
+
     }
 }
