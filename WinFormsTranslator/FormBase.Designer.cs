@@ -227,7 +227,6 @@
         private Button buttonClose;
         private ProgressBar progressBar1;
         private Button buttonProcessCancel;
-        private GroupBox groupBoxLogInfo;
         private Button buttonExploreFile;
         private Label labelFilter1;
         private TextBox textBoxFilter1;

@@ -55,6 +55,7 @@
             // 
             // comboBoxSourceLang
             // 
+            comboBoxSourceLang.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxSourceLang.FormattingEnabled = true;
             comboBoxSourceLang.ItemHeight = 15;
             comboBoxSourceLang.Location = new Point(102, 52);
@@ -66,6 +67,7 @@
             // 
             // comboBoxTargeLang
             // 
+            comboBoxTargeLang.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxTargeLang.FormattingEnabled = true;
             comboBoxTargeLang.ItemHeight = 15;
             comboBoxTargeLang.Location = new Point(102, 80);

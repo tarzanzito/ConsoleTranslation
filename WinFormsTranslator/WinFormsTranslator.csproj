@@ -9,9 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="FormBase.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <ProjectReference Include="..\CandalTranslation\CandalTranslation.csproj" />
   </ItemGroup>
 
 </Project>
