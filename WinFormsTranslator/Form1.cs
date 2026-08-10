@@ -20,8 +20,8 @@ namespace WinFormsTranslator
 
         private string _initialDirectory = string.Empty;
 
-        CancellationTokenSource? _cancellationTokenSource;// = new();
-        CancellationToken _cancellationToken;// = cancellationTokenSource.Token;
+        CancellationTokenSource? _cancellationTokenSource;
+        CancellationToken _cancellationToken;
 
         #endregion
 
